@@ -23,6 +23,12 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.util.Hashing;
 
+/**
+ * Connection pool for Redis cache sharding deployment model.
+ * 
+ * @author Chris
+ *
+ */
 public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
     private static final Logger logger = LoggerFactory.getLogger(RedisCacheShardConnectionPool.class);
 

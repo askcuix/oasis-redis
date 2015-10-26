@@ -66,6 +66,41 @@ Redis存储层的实现。利用Redis的Master-Slave模式实现主从复制，s
    connPool.destroy();
 ```
 
+## RedisCacheShardConnectionPool
+
+用于Redis cache分片部署模型的连接池实现，cache分片的场景主要是数据量较大，单Redis或单Redis主从的压力较大，但数据允许部分丢失，因此该模型未引入sentinel提供高可用，部署结构为每个分片均为主从结构。该分片基于一致性哈希，当增加或减少分片时，产生的数据移动最小，可用性最高。Jedis的ShardedJedisPool依旧没有提供从库的操作，该连接池提供了读写分离，在主从均不可用的情况下，将移除该分片。
+
+### 使用方式
+
+可以使用下面代码的方式，也可以配置成spring中的bean。
+
+``` Java 
+   Map<String, List<String>> shardMap = new HashMap<String, List<String>>();
+
+   List<String> shard1 = new ArrayList<String>();
+   shard1.add(“10.21.8.225:6379”);
+   shard1.add(“10.21.8.225:6380”);
+   shardMap.put("shard1", shard1);
+
+   List<String> shard2 = new ArrayList<String>();
+   shard2.add(“10.21.8.226:6379”);
+   shard2.add(“10.21.8.226:6380”);
+   shardMap.put("shard2", shard2);
+
+   List<String> shard3 = new ArrayList<String>();
+   shard3.add(“10.21.8.227:6379”);
+   shard3.add(“10.21.8.227:6380”);
+   shardMap.put("shard3", shard3);
+
+   RedisCacheShardConnectionPool connPool = new RedisCacheShardConnectionPool(shardMap);
+   connPool.init();
+   
+   Jedis writeJedis = connPool.getMasterPool(key).getResource();
+   Jedis readJedis = connPool.getSlavePool(key).getResource();
+   
+   connPool.destroy();
+```
+
 # Redis应用
 
 ## MasterElector
