@@ -8,5 +8,14 @@
 *.war
 *.ear
 
+# Mac os temp file
+.DS_Store
+
+# Project generated file
+/target/
+/.settings/
+/.classpath
+/.project
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
