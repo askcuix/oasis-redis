@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.oasis.redis.RedisExecution.PipelineAction;
 import com.oasis.redis.RedisExecution.RedisAction;
 import com.oasis.redis.RedisExecution.RedisReturnAction;
-import com.oasis.redis.pool.RedisPool;
 import com.oasis.redis.pool.shard.RedisShardConnectionPool;
+import com.oasis.redis.pool.shard.RedisShardPool;
 import com.oasis.redis.util.RedisUtil;
 
 import redis.clients.jedis.Jedis;
@@ -41,8 +41,8 @@ public class RedisShardTemplate {
         this.connPool = connPool;
     }
 
-    public RedisPool getWritePool(String key) {
-        RedisPool writePool = connPool.getMasterPool(key);
+    public RedisShardPool getWritePool(String key) {
+        RedisShardPool writePool = connPool.getMasterPool(key);
         if (writePool == null) {
             throw new IllegalStateException("[" + key + "] Redis Master pool is unavailable.");
         }
@@ -50,8 +50,8 @@ public class RedisShardTemplate {
         return writePool;
     }
 
-    public RedisPool getReadPool(String key) {
-        RedisPool readPool = connPool.getSlavePool(key);
+    public RedisShardPool getReadPool(String key) {
+        RedisShardPool readPool = connPool.getSlavePool(key);
         if (readPool == null) {
             throw new IllegalStateException("[" + key + "] Redis Slave pool is unavailable.");
         }
@@ -64,7 +64,7 @@ public class RedisShardTemplate {
      */
     public <T> T executeWrite(String key, RedisReturnAction<T> redisAction) throws JedisException {
         Jedis jedis = null;
-        RedisPool redisPool = null;
+        RedisShardPool redisPool = null;
         boolean broken = false;
 
         try {
@@ -86,7 +86,7 @@ public class RedisShardTemplate {
      */
     public void executeWrite(String key, RedisAction redisAction) throws JedisException {
         Jedis jedis = null;
-        RedisPool redisPool = null;
+        RedisShardPool redisPool = null;
         boolean broken = false;
 
         try {
@@ -108,7 +108,7 @@ public class RedisShardTemplate {
      */
     public <T> T executeRead(String key, RedisReturnAction<T> redisAction) throws JedisException {
         Jedis jedis = null;
-        RedisPool redisPool = null;
+        RedisShardPool redisPool = null;
         boolean broken = false;
 
         try {
@@ -130,7 +130,7 @@ public class RedisShardTemplate {
      */
     public List<Object> doPiplineAndReturn(String key, PipelineAction pipelineAction) throws JedisException {
         Jedis jedis = null;
-        RedisPool redisPool = null;
+        RedisShardPool redisPool = null;
         boolean broken = false;
 
         try {
@@ -154,7 +154,7 @@ public class RedisShardTemplate {
      */
     public void doPipline(String key, PipelineAction pipelineAction) throws JedisException {
         Jedis jedis = null;
-        RedisPool redisPool = null;
+        RedisShardPool redisPool = null;
         boolean broken = false;
 
         try {
@@ -177,7 +177,7 @@ public class RedisShardTemplate {
      * Return jedis connection to the pool, call different return methods
      * depends on the connection broken status.
      */
-    public void closeResource(RedisPool redisPool, Jedis jedis, boolean conectionBroken) {
+    public void closeResource(RedisShardPool redisPool, Jedis jedis, boolean conectionBroken) {
         if ((redisPool == null) || redisPool.isClosed()) {
             return;
         }

@@ -1,7 +1,5 @@
 package com.oasis.redis.pool.shard;
 
-import com.oasis.redis.pool.RedisPool;
-
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Protocol;
 
@@ -38,12 +36,20 @@ public abstract class RedisShardConnectionPool {
     }
 
     /**
+     * Get shard name which key reside in this shard.
+     * 
+     * @param key
+     * @return shard name
+     */
+    public abstract String getShard(String key);
+
+    /**
      * Get master pool for write operation.
      * 
      * @param key
      * @return master pool
      */
-    public abstract RedisPool getMasterPool(String key);
+    public abstract RedisShardPool getMasterPool(String key);
 
     /**
      * Get slave pool for read operation.
@@ -55,14 +61,14 @@ public abstract class RedisShardConnectionPool {
      * @param key
      * @return
      */
-    public abstract RedisPool getSlavePool(String key);
+    public abstract RedisShardPool getSlavePool(String key);
 
     /**
      * Remove broken connection pool.
      * 
      * @param pool
      */
-    public abstract void returnBrokenPool(RedisPool pool);
+    public abstract void returnBrokenPool(RedisShardPool pool);
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;

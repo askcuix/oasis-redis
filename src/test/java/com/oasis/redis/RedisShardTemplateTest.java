@@ -16,8 +16,8 @@ import com.lordofthejars.nosqlunit.proxy.RedirectProxy;
 import com.lordofthejars.nosqlunit.redis.EmbeddedRedis;
 import com.lordofthejars.nosqlunit.redis.EmbeddedRedis.EmbeddedRedisRuleBuilder;
 import com.lordofthejars.nosqlunit.redis.embedded.NoArgsJedis;
-import com.oasis.redis.pool.RedisPool;
 import com.oasis.redis.pool.shard.RedisShardConnectionPool;
+import com.oasis.redis.pool.shard.RedisShardPool;
 
 import redis.clients.jedis.Jedis;
 
@@ -32,7 +32,7 @@ public class RedisShardTemplateTest {
         Jedis embeddedJedis = RedirectProxy.createProxy(NoArgsJedis.class, new EmbeddedJedisExt());
 
         RedisShardConnectionPool connPool = Mockito.mock(RedisShardConnectionPool.class);
-        RedisPool redisPool = Mockito.mock(RedisPool.class);
+        RedisShardPool redisPool = Mockito.mock(RedisShardPool.class);
 
         Mockito.when(connPool.getMasterPool(Mockito.anyString())).thenReturn(redisPool);
         Mockito.when(connPool.getSlavePool(Mockito.anyString())).thenReturn(redisPool);

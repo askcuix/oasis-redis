@@ -142,7 +142,11 @@ public class RedisReplicaConnectionPool extends RedisConnectionPool {
 
             if (redisMasterPool != null && (redisMasterPool.getHost().equals(pool.getHost())
                     && redisMasterPool.getPort() == pool.getPort())) {
-                redisMasterPool.destroy();
+                try {
+                    redisMasterPool.destroy();
+                } catch (Exception e) {
+                    logger.warn("Destroy unavailable master pool error.", e);
+                }
                 redisMasterPool = null;
 
                 logger.warn("Redis master[{}:{}] is not available and removed it.", pool.getHost(), pool.getPort());
