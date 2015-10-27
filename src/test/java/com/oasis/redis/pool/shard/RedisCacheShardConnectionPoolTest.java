@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -30,10 +32,10 @@ public class RedisCacheShardConnectionPoolTest {
     private static HostAndPort redisShard3Master = new HostAndPort("10.21.8.227", 6380);
     private static HostAndPort redisShard3Slave = new HostAndPort("10.21.8.227", 6381);
 
-    private RedisCacheShardConnectionPool connPool;
+    private static RedisCacheShardConnectionPool connPool;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() {
         Map<String, List<String>> shardMap = new HashMap<String, List<String>>();
 
         List<String> shard1 = new ArrayList<String>();
@@ -53,6 +55,17 @@ public class RedisCacheShardConnectionPoolTest {
 
         connPool = new RedisCacheShardConnectionPool(shardMap);
         connPool.init();
+    }
+    
+    @Test
+    public void testShard() {
+        String key1 = "test.key1";
+        String key2 = "test.key2";
+        
+        String shard1 = connPool.getShard(key1);
+        String shard2 = connPool.getShard(key2);
+        
+        assertNotEquals(shard1, shard2);
     }
 
     @Test
@@ -74,8 +87,8 @@ public class RedisCacheShardConnectionPoolTest {
         assertNull(readJedis.get(key));
     }
 
-    @After
-    public void tearDown() {
+    @AfterClass
+    public static void tearDown() {
         if (connPool != null) {
             connPool.destroy();
         }

@@ -27,7 +27,7 @@ import redis.clients.util.Hashing;
  * Connection pool for Redis cache sharding deployment model.
  * 
  * @author Chris
- *
+ * 
  */
 public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
     private static final Logger logger = LoggerFactory.getLogger(RedisCacheShardConnectionPool.class);
@@ -88,10 +88,22 @@ public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
                             logger.warn("Duplicate redis shard[{}] master: {}, add to slave.", shardName,
                                     redis.toString());
 
-                            redisSlavePoolsMap.getOrDefault(shardName, new ArrayList<RedisShardPool>()).add(pool);
+                            List<RedisShardPool> slavePoolList = redisSlavePoolsMap.get(shardName);
+                            if (slavePoolList == null) {
+                                slavePoolList = new ArrayList<RedisShardPool>();
+                            }
+                            slavePoolList.add(pool);
+
+                            redisSlavePoolsMap.put(shardName, slavePoolList);
                         }
                     } else {
-                        redisSlavePoolsMap.getOrDefault(shardName, new ArrayList<RedisShardPool>()).add(pool);
+                        List<RedisShardPool> slavePoolList = redisSlavePoolsMap.get(shardName);
+                        if (slavePoolList == null) {
+                            slavePoolList = new ArrayList<RedisShardPool>();
+                        }
+                        slavePoolList.add(pool);
+
+                        redisSlavePoolsMap.put(shardName, slavePoolList);
                     }
                 } catch (Exception e) {
                     logger.warn("Initial redis[" + redis.toString() + "] error.", e);
@@ -187,7 +199,10 @@ public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
             return redisSlavePool.get(0);
         }
 
-        AtomicInteger sequences = seqMap.getOrDefault(shardName, new AtomicInteger());
+        AtomicInteger sequences = seqMap.get(shardName);
+        if (sequences == null) {
+            sequences = new AtomicInteger();
+        }
         int index = sequences.getAndIncrement();
         if ((index >= Integer.MAX_VALUE) || (index < 0)) {
             sequences.set(0);
@@ -214,8 +229,8 @@ public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
             }
 
             RedisShardPool redisMasterPool = redisMasterPoolMap.get(pool.getShardName());
-            if (redisMasterPool != null && (redisMasterPool.getHost().equals(pool.getHost())
-                    && redisMasterPool.getPort() == pool.getPort())) {
+            if (redisMasterPool != null
+                    && (redisMasterPool.getHost().equals(pool.getHost()) && redisMasterPool.getPort() == pool.getPort())) {
                 try {
                     redisMasterPool.destroy();
                 } catch (Exception e) {
@@ -228,8 +243,12 @@ public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
                 return;
             }
 
-            Iterator<RedisShardPool> slavePoolIterator = redisSlavePoolsMap
-                    .getOrDefault(pool.getShardName(), new ArrayList<RedisShardPool>()).iterator();
+            List<RedisShardPool> slavePoolList = redisSlavePoolsMap.get(pool.getShardName());
+            if (slavePoolList == null || slavePoolList.isEmpty()) {
+                return;
+            }
+
+            Iterator<RedisShardPool> slavePoolIterator = slavePoolList.iterator();
             while (slavePoolIterator.hasNext()) {
                 RedisPool slave = slavePoolIterator.next();
 
@@ -266,8 +285,9 @@ public class RedisCacheShardConnectionPool extends RedisShardConnectionPool {
                     logger.info("[{}] Redis master pool[{}:{}] destroyed.", redisMasterPool.getShardName(),
                             redisMasterPool.getHost(), redisMasterPool.getPort());
                 } catch (Exception e) {
-                    logger.warn("Destroy shard[" + redisMasterPool.getShardName() + "] master pool["
-                            + redisMasterPool.getHost() + ":" + redisMasterPool.getPort() + "] error.", e);
+                    logger.warn(
+                            "Destroy shard[" + redisMasterPool.getShardName() + "] master pool["
+                                    + redisMasterPool.getHost() + ":" + redisMasterPool.getPort() + "] error.", e);
                 }
             }
         }
