@@ -35,6 +35,8 @@ public class SentinelEventSubscriber extends JedisPubSub {
             handleSlaveDown(message);
         } else if ("-sdown".equals(channel)) {
             handleSlaveUp(message);
+        } else if ("+slave".equals(channel)) {
+            handleAddSlave(message);
         }
     }
 
@@ -131,8 +133,7 @@ public class SentinelEventSubscriber extends JedisPubSub {
         }
 
         if (!masterName.equals(sdownMsg[5])) {
-            logger.warn(
-                    "Ignoring unmatched +sdown message received on sentinel {}, valid master name: {}, message: {}",
+            logger.warn("Ignoring unmatched +sdown message received on sentinel {}, valid master name: {}, message: {}",
                     sentinel, masterName, message);
 
             return;
@@ -173,14 +174,54 @@ public class SentinelEventSubscriber extends JedisPubSub {
         }
 
         if (!masterName.equals(sdownMsg[5])) {
-            logger.warn(
-                    "Ignoring unmatched -sdown message received on sentinel {}, valid master name: {}, message: {}",
+            logger.warn("Ignoring unmatched -sdown message received on sentinel {}, valid master name: {}, message: {}",
                     sentinel, masterName, message);
 
             return;
         }
 
         logger.info("Redis slave[{}:{}] of master[{}] is up.", sdownMsg[2], sdownMsg[3], sdownMsg[5]);
+
+        // update slaves
+        List<HostAndPort> slaves = RedisUtil.lookupSlavesBySentinel(masterName, sentinel);
+        eventReceiver.refreshSlavePool(slaves);
+    }
+
+    /**
+     * Handle sentinel event "+slave".
+     * 
+     * +slave <instance-type> <name> <ip> <port> @
+     * <master-name> <master-ip> <master-port>
+     * 
+     * @param message
+     */
+    private void handleAddSlave(String message) {
+        if (message == null || "".equals(message)) {
+            return;
+        }
+
+        String[] sdownMsg = message.split(" ");
+
+        if (!"slave".equals(sdownMsg[0])) {
+            logger.info("Ignore non-slave +slave message received on sentinel {}, message: {}", sentinel, message);
+
+            return;
+        }
+
+        if (sdownMsg.length != 8) {
+            logger.warn("Invalid +slave message received on sentinel {}, message: {}", sentinel, message);
+
+            return;
+        }
+
+        if (!masterName.equals(sdownMsg[5])) {
+            logger.warn("Ignoring unmatched +slave message received on sentinel {}, valid master name: {}, message: {}",
+                    sentinel, masterName, message);
+
+            return;
+        }
+
+        logger.info("Redis slave[{}:{}] of master[{}] is added.", sdownMsg[2], sdownMsg[3], sdownMsg[5]);
 
         // update slaves
         List<HostAndPort> slaves = RedisUtil.lookupSlavesBySentinel(masterName, sentinel);

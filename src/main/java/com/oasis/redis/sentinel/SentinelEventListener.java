@@ -151,8 +151,7 @@ public class SentinelEventListener {
 
                         subscriber = new SentinelEventSubscriber(currentSentinel, eventReceiver);
 
-                        // TODO: +slave maybe need consider
-                        sentinelJedis.subscribe(subscriber, "+switch-master", "+sdown", "-sdown");
+                        sentinelJedis.subscribe(subscriber, "+switch-master", "+sdown", "-sdown", "+slave");
                     } else {
                         logger.info("All sentinels down, sleep {}ms and try to connect again.",
                                 subscribeRetryWaitTimeMillis);

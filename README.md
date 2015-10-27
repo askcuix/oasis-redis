@@ -43,7 +43,7 @@ Redis存储层的实现。利用Redis的Master-Slave模式实现主从复制，s
 
 ## RedisSentinelConnectionPool
 
-用于Redis sentinel部署模型的连接池实现，Redis采用主从结构，Sentinel的数量至少为3个。Jedis的JedisSentinelPool只监听了switch-master事件，连接池也只包含了master，未将slave加入连接池。RedisSentinelConnectionPool在此基础上增加了+sdown、-sdown等事件的监听，并实现了读写分离。
+用于Redis sentinel部署模型的连接池实现，Redis采用主从结构，Sentinel的数量至少为3个。Jedis的JedisSentinelPool只监听了switch-master事件，连接池也只包含了master，未将slave加入连接池。RedisSentinelConnectionPool在此基础上增加了+sdown、-sdown、+slave等事件的监听，并实现了读写分离。
 
 ### 使用方式
 
